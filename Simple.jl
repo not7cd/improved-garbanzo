@@ -1,15 +1,18 @@
 using Plots
 using LinearAlgebra
 using ProgressMeter
+gr()
+theme(:solarized_light)
 
-dt = 0.01
+dt = 0.00001
 
 mutable struct Particle
-    r::Array{Float64, 1}
-    v::Array{Float64, 1}
+    r::Vector{Float64}
+    v::Vector{Float64}
 end
 
-p1 = Particle([1., 0., 0.], [0, 1., 0])
+
+p1 = Particle([1., 0., 0.], [0, .5, 0])
 
 function step!(p::Particle)
     # len_r2 =
@@ -21,9 +24,10 @@ function step!(p::Particle)
 end
 
 # initialize a 3D plot with 1 empty series
-plt = plot(1, xlim=(-3,3), ylim=(-3,3),
-                title = "PJP <3", marker = 0)
-err_plt = plot(2)
+err_plt = plot(2, title= "Error")
+plt = plot(1,
+                title = "PJP <3", marker = 1, size = (800, 800),
+                m = (:cross, 2, stroke(0)))
 
 # err1 = dot(p1.r, p1.r)
 # println(p1, err1)
@@ -33,15 +37,16 @@ err_plt = plot(2)
 
 # println("Error ", err2/err1 - 1, "%")
 
-n = 1000
+n = 100
 prog = Progress(n,1)
 # build an animated gif by pushing new points to the plot, saving every 10th frame
-@gif for i=1:n
-    step!(p1)
+for i=1:n
+    for j=1:5000
+        step!(p1)
+    end
     push!(err_plt, dot(p1.r, p1.r) - 1)
     push!(plt, p1.r[1], p1.r[2])
     next!(prog)
-    plt
-end every 10
+end
 
-plot(plt, err_plt, layout= grid(2, 1, heights=[0.7,0.3]))
+plot(plt, err_plt, layout= grid(2, 1, heights=[0.7,0.3]), size = (500, 700))
