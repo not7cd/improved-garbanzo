@@ -29,7 +29,7 @@ function rk4!(p::Particle, a, h)
 end
 
 
-p1 = Particle([1., 0., 0.], [0, 1., 0])
+p1 = Particle([1., 0., 0.], [0, -1., 0], 1)
 
 # initialize a 3D plot with 1 empty series
 err_plt = plot(1, title= "Error")
