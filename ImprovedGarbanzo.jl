@@ -41,7 +41,7 @@ function step!(ensemble, h)
     end
 end
 
-function perform(n, ensemble::Vector{Particle}, output, h=0.0001)
+function perform!(n, ensemble::Vector{Particle}, output, h=0.0001)
     hidden_n = 1000
     output_n = Integer(n / hidden_n)
 
@@ -56,16 +56,20 @@ function perform(n, ensemble::Vector{Particle}, output, h=0.0001)
     end
 end
 
-e = [
-    Particle([1., 0., 0.], [0., .5, 0.], 1.),
-    Particle([0., 0., 0.], [0., -.5, 0.], 1.),
-    Particle([-1., 0., 0.], [0., -.1, 0.], 1.)
-    ]
 
-plt = scatter(1, m = (:cross, 3, stroke(0)),
-            ylim=(-1.2, 1.2), xlim=(-1.2,1.2))
 
-plt_p = [scatter!(1, m = (:cross, 3, stroke(0))) for i=2:10]
+function prep_plot(ensemble)
+    lim = (-1.2, 1.2)
+    marker = (:cross, 3, stroke(0))
+    global plt = scatter3d(1, m = marker,
+        ylim=lim, xlim=lim, zlim=lim)
+
+    for i=2:length(ensemble)
+        scatter3d!(1, m = marker)
+    end
+end
+
+
 
 function print_out(ensemble::Vector{Particle})
     println(stderr, ensemble[1])
@@ -73,8 +77,17 @@ end
 
 function plot_out(ensemble::Vector{Particle})
     for (i, p) in enumerate(ensemble)
-        push!(plt.series_list[i], p.r[1], p.r[2])
+        push!(plt.series_list[i], p.r[1], p.r[2], p.r[3])
     end
+end
+
+function ex_2body()
+    e = [
+        Particle([1., 0., 0.], [0., .5, 0.], 1.),
+        Particle([0., 0., 0.], [0., -.5, 0.], 1.),
+    ]
+    prep_plot(e)
+    perform!(1000000, e, plot_out)
 end
 
 function ex_3body_figure8()
@@ -85,18 +98,20 @@ function ex_3body_figure8()
     Particle([-1., 0., 0.], [p1, p2, 0.], 1.),
     Particle([-0., 0., 0.], [-2p1, -2p2, 0.], 1.)
     ]
-    perform(1500000, e, plot_out)
+    prep_plot(e)
+    perform!(150000, e, plot_out)
 end
 
 function ex_random_10()
     e = [Particle(
-            -rand(Float32, 3),
-            -rand(Float32, 3),
+            2rand(Float32, 3) .- 1.,
+            2rand(Float32, 3) .- 1.,
             1.)
         for i=1:10]
-    perform(15000, e, plot_out)
+    prep_plot(e)
+    perform!(150000, e, plot_out, 0.0001)
 end
 
-# perform(150000, e, plot_out)
-ex_random_10()
+# perform!(150000, e, plot_out)
+ex_2body()
 plot(plt, size = (500, 500))
