@@ -1,3 +1,6 @@
+include("common.jl")
+
+using .common
 using Plots
 using LinearAlgebra
 using ProgressMeter
@@ -8,10 +11,6 @@ dt = 0.00001
 m1 = 0.6
 m2 = 1 - m1
 
-mutable struct Particle
-    r::Vector{Float64}
-    v::Vector{Float64}
-end
 
 function step!(p::Particle)
     len_r2 = dot(p.r, p.r)
@@ -29,11 +28,11 @@ plt = plot(1, xlim=(-1.2,1.2), ylim=(-1.2,1.2),
                 title = "PJP <3", size = (800, 800),
                 m = (:cross, 3, stroke(0)))
 
-n = 500
+n = 60
 prog = Progress(n,1)
 # build an animated gif by pushing new points to the plot, saving every 10th frame
 for i=1:n
-    for j=1:100000
+    for j=1:100000 /10
         step!(p1)
     end
     push!(err_plt, dot(p1.r, p1.r) - 1)

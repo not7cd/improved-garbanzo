@@ -1,3 +1,6 @@
+include("common.jl")
+
+using .common
 using Plots
 using LinearAlgebra
 using ProgressMeter
@@ -7,11 +10,6 @@ theme(:solarized_light)
 dt = 0.00001
 m1 = 0.6
 m2 = 1 - m1
-
-mutable struct Particle
-    r::Vector{Float64}
-    v::Vector{Float64}
-end
 
 function rk2!(p::Particle, a, h)
     k1_v = a
@@ -60,7 +58,7 @@ function step!(p::Particle)
     rk4!(p, a, dt)
 end
 
-n = 500
+n = 45
 prog = Progress(n,1)
 # build an animated gif by pushing new points to the plot, saving every 10th frame
 for i=1:n
