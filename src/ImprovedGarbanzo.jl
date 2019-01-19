@@ -154,7 +154,7 @@ function ex_random_10()
 end
 
 # perform!(150000, e, plot_trajectory_out)
-ex_random(100)
-plot(plt, size = (500, 500))
+# ex_random(100)
+# plot(plt, size = (500, 500))
 
 end
