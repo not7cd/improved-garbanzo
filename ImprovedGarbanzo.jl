@@ -1,4 +1,5 @@
 # N-body integrator with stupid name
+module ImprovedGarbanzo
 include("common.jl")
 
 using .common
@@ -35,12 +36,18 @@ function step!(ensemble, h)
             dr = p1.r - p2.r
             r2 = dot(dr, dr)
             r3 = r2 * √r2 + ε
-            a -= (dr / r3)
+            a -= (dr / r3) * 0.5
         end
         rk4!(p1, a, h)
     end
 end
 
+
+"""
+Performs full simulation during `n` steps.
+it calls `output` function every  `output_n` steps,
+where `output_n` = `n` / `1000`
+"""
 function perform!(n, ensemble::Vector{Particle}, output, h=0.0001)
     hidden_n = 1000
     output_n = Integer(n / hidden_n)
@@ -56,10 +63,8 @@ function perform!(n, ensemble::Vector{Particle}, output, h=0.0001)
     end
 end
 
-
-
 function prep_plot(ensemble)
-    lim = (-1.2, 1.2)
+    lim = (-2, 2)
     marker = (:cross, 3, stroke(0))
     global plt = scatter3d(1, m = marker,
         ylim=lim, xlim=lim, zlim=lim)
@@ -69,49 +74,87 @@ function prep_plot(ensemble)
     end
 end
 
-
-
 function print_out(ensemble::Vector{Particle})
     println(stderr, ensemble[1])
 end
 
-function plot_out(ensemble::Vector{Particle})
+"""
+Adds subsequent postitions of particles in the system
+to draw trajectory trails.
+"""
+function plot_trajectory_out(ensemble::Vector{Particle})
     for (i, p) in enumerate(ensemble)
         push!(plt.series_list[i], p.r[1], p.r[2], p.r[3])
     end
 end
 
+"""
+Every time it creates new plot to present
+only current position of particles in the system.
+"""
+function plot_distribution_out(ensemble::Vector{Particle})
+    lim = (-2, 2)
+    marker = (:cross, 3, stroke(0))
+    global plt = scatter3d(1, m = marker,
+            ylim=lim, xlim=lim, zlim=lim)
+    for (i, p) in enumerate(ensemble)
+        push!(plt, p.r[1], p.r[2], p.r[3])
+    end
+end
+
+"""
+_Example_
+Solves system of two similar bodies orbiting each other
+"""
 function ex_2body()
     e = [
         Particle([1., 0., 0.], [0., .5, 0.], 1.),
         Particle([0., 0., 0.], [0., -.5, 0.], 1.),
     ]
     prep_plot(e)
-    perform!(1000000, e, plot_out)
+    perform!(1000000, e, plot_trajectory_out)
 end
 
+"""
+_Example_
+Most known solution to 3 body problem
+"""
 function ex_3body_figure8()
     p1 = 0.347111
     p2 = 0.532728
     e = [
-    Particle([1., 0., 0.], [p1, p2, 0.], 1.),
-    Particle([-1., 0., 0.], [p1, p2, 0.], 1.),
-    Particle([-0., 0., 0.], [-2p1, -2p2, 0.], 1.)
+        Particle([1., 0., 0.], [p1, p2, 0.], 1.),
+        Particle([-1., 0., 0.], [p1, p2, 0.], 1.),
+        Particle([-0., 0., 0.], [-2p1, -2p2, 0.], 1.)
     ]
     prep_plot(e)
-    perform!(150000, e, plot_out)
+    perform!(150000, e, plot_trajectory_out)
 end
 
-function ex_random_10()
+"""
+_Example_
+Solves system for `N` random bodies
+"""
+function ex_random(N)
     e = [Particle(
             2rand(Float32, 3) .- 1.,
-            2rand(Float32, 3) .- 1.,
+            (2rand(Float32, 3) .- 1.)*4,
             1.)
-        for i=1:10]
-    prep_plot(e)
-    perform!(150000, e, plot_out, 0.0001)
+        for i=1:N]
+
+    perform!(15000, e, plot_distribution_out, 0.0001)
 end
 
-# perform!(150000, e, plot_out)
-ex_2body()
+"""
+_Example_
+Solves system for 10 random bodies
+"""
+function ex_random_10()
+    ex_random(10)
+end
+
+# perform!(150000, e, plot_trajectory_out)
+ex_random(100)
 plot(plt, size = (500, 500))
+
+end
