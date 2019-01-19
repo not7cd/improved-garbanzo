@@ -11,17 +11,6 @@ dt = 0.00001
 m1 = 0.6
 m2 = 1 - m1
 
-function rk2!(p::Particle, a, h)
-    k1_v = a
-    k1_r = p.v
-
-    k2_v = k1_r * h
-    k2_r = k1_v * h
-
-    p.r += k1_r * h
-    p.v += k1_v * h
-end
-
 function rk4!(p::Particle, a, h)
     k1_v = a
     k1_r = p.v
