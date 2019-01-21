@@ -6,6 +6,7 @@ using .common
 using Plots
 using LinearAlgebra
 using ProgressMeter
+pyplot()
 
 ε = 0.0001
 
@@ -158,3 +159,49 @@ end
 # plot(plt, size = (500, 500))
 
 end
+
+doc = """ImprovedGarbanzo
+Simple N-body simulator
+
+Usage:
+  ImprovedGarbanzo.jl perform <N>
+  ImprovedGarbanzo.jl -h | --help
+  ImprovedGarbanzo.jl --version
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
+  --euler
+  --rk4
+
+"""
+using DocOpt  # import docopt function
+
+function cli()
+
+  arguments = docopt(doc, version=v"1.0.0")
+
+  aliases = Dict(
+    "p" => "perform",
+  )
+
+  for (key, value) in arguments
+    if value != true ; continue ; end
+
+    if haskey(aliases, key)
+      key = aliases[key]
+    end
+  end
+
+  if haskey(arguments, "perform")
+      println(arguments)
+      N = parse(Int ,arguments["<N>"])
+      ImprovedGarbanzo.ex_random(N)
+      return
+  end
+
+  error("Invalid cli input.")
+
+end
+
+cli()
