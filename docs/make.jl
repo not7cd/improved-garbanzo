@@ -6,8 +6,6 @@ makedocs(
     sitename="ImprovedGarbanzo",
     modules = [ImprovedGarbanzo],
     pages=[
-        "Start" => "index.md"
-        "Examples" => "examples.md"
         "Reference" => "reference.md"
     ],
 )

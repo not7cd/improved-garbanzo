@@ -1,4 +1,5 @@
 # N-body integrator with stupid name
+
 module ImprovedGarbanzo
 include("common.jl")
 
@@ -8,6 +9,7 @@ using LinearAlgebra
 using ProgressMeter
 pyplot()
 
+mode = :runge_kutta
 ε = 0.0001
 
 function rk4!(p::Particle, a, h)
@@ -27,7 +29,13 @@ function rk4!(p::Particle, a, h)
     p.v += h/6 * (k1_v + 2*k2_v + 2*k3_v + k4_v)
 end
 
+function euler!(p::Particle, a, h)
+    p.r += h * p.v
+    p.v += h * a
+end
+
 function step!(ensemble, h)
+    global mode
     for p1 in ensemble
         a = [0.,0.,0.]
         for p2 in ensemble
@@ -39,7 +47,11 @@ function step!(ensemble, h)
             r3 = r2 * √r2 + ε
             a -= (dr / r3) * 0.5
         end
-        rk4!(p1, a, h)
+        if mode == :fwd_euler
+            euler!(p1, a, h)
+        else
+            rk4!(p1, a, h)
+        end
     end
 end
 
@@ -136,7 +148,8 @@ end
 _Example_
 Solves system for `N` random bodies
 """
-function ex_random(N)
+function ex_random(N, new_mode)
+    global mode = new_mode
     e = [Particle(
             2rand(Float32, 3) .- 1.,
             (2rand(Float32, 3) .- 1.)*4,
@@ -165,6 +178,7 @@ Simple N-body simulator
 
 Usage:
   ImprovedGarbanzo.jl perform <N>
+  ImprovedGarbanzo.jl perform <N>  [--euler|--runge-kutta]
   ImprovedGarbanzo.jl -h | --help
   ImprovedGarbanzo.jl --version
 
@@ -172,7 +186,7 @@ Options:
   -h --help     Show this screen.
   --version     Show version.
   --euler
-  --rk4
+  --runge-kutta
 
 """
 using DocOpt  # import docopt function
@@ -181,22 +195,27 @@ function cli()
 
   arguments = docopt(doc, version=v"1.0.0")
 
-  aliases = Dict(
-    "p" => "perform",
-  )
-
-  for (key, value) in arguments
-    if value != true ; continue ; end
-
-    if haskey(aliases, key)
-      key = aliases[key]
-    end
-  end
+  # aliases = Dict(
+  #   "p" => "perform",
+  # )
+  #
+  # for (key, value) in arguments
+  #   if value != true ; continue ; end
+  #
+  #   if haskey(aliases, key)
+  #     key = aliases[key]
+  #   end
+  # end
 
   if haskey(arguments, "perform")
       println(arguments)
       N = parse(Int ,arguments["<N>"])
-      ImprovedGarbanzo.ex_random(N)
+      if arguments["--euler"]
+          mode = :fwd_euler
+      elseif arguments["--runge-kutta"]
+          mode = :runge_kutta
+      end
+      ImprovedGarbanzo.ex_random(N, mode)
       return
   end
 
