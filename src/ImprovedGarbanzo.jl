@@ -7,7 +7,7 @@ using .common
 using Plots
 using LinearAlgebra
 using ProgressMeter
-pyplot()
+# pyplot()
 
 mode = :runge_kutta
 ε = 0.0001
@@ -34,6 +34,13 @@ function euler!(p::Particle, a, h)
     p.v += h * a
 end
 
+function leapfrog!(p::Particle, a, h)
+    p.r += 0.5h * p.v
+    p.v += h * a
+    p.r += 0.5h * p.v
+end
+
+
 function step!(ensemble, h)
     global mode
     for p1 in ensemble
@@ -45,7 +52,7 @@ function step!(ensemble, h)
             dr = p1.r - p2.r
             r2 = dot(dr, dr)
             r3 = r2 * √r2 + ε
-            a -= (dr / r3) * 0.5
+            a -= (dr / r3)
         end
         if mode == :fwd_euler
             euler!(p1, a, h)
@@ -117,35 +124,6 @@ end
 
 """
 _Example_
-Solves system of two similar bodies orbiting each other
-"""
-function ex_2body()
-    e = [
-        Particle([1., 0., 0.], [0., .5, 0.], 1.),
-        Particle([0., 0., 0.], [0., -.5, 0.], 1.),
-    ]
-    prep_plot(e)
-    perform!(1000000, e, plot_trajectory_out)
-end
-
-"""
-_Example_
-Most known solution to 3 body problem
-"""
-function ex_3body_figure8()
-    p1 = 0.347111
-    p2 = 0.532728
-    e = [
-        Particle([1., 0., 0.], [p1, p2, 0.], 1.),
-        Particle([-1., 0., 0.], [p1, p2, 0.], 1.),
-        Particle([-0., 0., 0.], [-2p1, -2p2, 0.], 1.)
-    ]
-    prep_plot(e)
-    perform!(150000, e, plot_trajectory_out)
-end
-
-"""
-_Example_
 Solves system for `N` random bodies
 """
 function ex_random(N, new_mode)
@@ -157,14 +135,6 @@ function ex_random(N, new_mode)
         for i=1:N]
 
     perform!(15000, e, plot_distribution_out, 0.0001)
-end
-
-"""
-_Example_
-Solves system for 10 random bodies
-"""
-function ex_random_10()
-    ex_random(10)
 end
 
 # perform!(150000, e, plot_trajectory_out)
