@@ -3,7 +3,7 @@
 module ImprovedGarbanzo
 include("common.jl")
 
-using .common
+# using .common
 using Plots
 using LinearAlgebra
 using ProgressMeter
@@ -12,7 +12,7 @@ using ProgressMeter
 mode = :runge_kutta
 ε = 0.0001
 
-function rk4!(p::Particle, a, h)
+function rk4!(p::Body, a, h)
     k1_v = a
     k1_r = p.v
 
@@ -29,12 +29,12 @@ function rk4!(p::Particle, a, h)
     p.v += h/6 * (k1_v + 2*k2_v + 2*k3_v + k4_v)
 end
 
-function euler!(p::Particle, a, h)
+function euler!(p::Body, a, h)
     p.r += h * p.v
     p.v += h * a
 end
 
-function leapfrog!(p::Particle, a, h)
+function leapfrog!(p::Body, a, h)
     p.r += 0.5h * p.v
     p.v += h * a
     p.r += 0.5h * p.v
@@ -68,8 +68,8 @@ Performs full simulation during `n` steps.
 it calls `output` function every  `output_n` steps,
 where `output_n` = `n` / `1000`
 """
-function perform!(n, ensemble::Vector{Particle}, output, h=0.0001)
-    hidden_n = 1000
+function perform!(n, ensemble::Vector{Body}, output, h=0.0001)
+    hidden_n = 100
     output_n = Integer(n / hidden_n)
 
     println(stderr, "Performing simulation")
@@ -94,7 +94,7 @@ function prep_plot(ensemble)
     end
 end
 
-function print_out(ensemble::Vector{Particle})
+function print_out(ensemble::Vector{Body})
     println(stderr, ensemble[1])
 end
 
@@ -102,7 +102,7 @@ end
 Adds subsequent postitions of particles in the system
 to draw trajectory trails.
 """
-function plot_trajectory_out(ensemble::Vector{Particle})
+function plot_trajectory_out(ensemble::Vector{Body})
     for (i, p) in enumerate(ensemble)
         push!(plt.series_list[i], p.r[1], p.r[2], p.r[3])
     end
@@ -112,7 +112,7 @@ end
 Every time it creates new plot to present
 only current position of particles in the system.
 """
-function plot_distribution_out(ensemble::Vector{Particle})
+function plot_distribution_out(ensemble::Vector{Body})
     lim = (-2, 2)
     marker = (:cross, 3, stroke(0))
     global plt = scatter3d(1, m = marker,
@@ -128,13 +128,13 @@ Solves system for `N` random bodies
 """
 function ex_random(N, new_mode)
     global mode = new_mode
-    e = [Particle(
+    e = [Body(
             2rand(Float32, 3) .- 1.,
             (2rand(Float32, 3) .- 1.)*4,
             1.)
         for i=1:N]
 
-    perform!(15000, e, plot_distribution_out, 0.0001)
+    perform!(100000, e, plot_distribution_out, 0.0001)
 end
 
 # perform!(150000, e, plot_trajectory_out)
@@ -193,4 +193,4 @@ function cli()
 
 end
 
-cli()
+# cli()

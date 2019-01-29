@@ -98,13 +98,13 @@ end
 function quadrant_from_symbol(parent::Quad, symbol::Symbol)
     mid_x = (parent.xt + parent.xb) / 2
     mid_y = (parent.yt + parent.yb) / 2
-    if symbol == :nw
+    if symbol == :ne
         Quad(mid_x, mid_y, parent.xt, parent.yt)
-    elseif symbol == :ne
-        Quad(mid_x, parent.yb, parent.xt, mid_y)
-    elseif symbol == :sw
-        Quad(parent.xb, mid_y, mid_x, parent.yt)
     elseif symbol == :se
+        Quad(mid_x, parent.yb, parent.xt, mid_y)
+    elseif symbol == :nw
+        Quad(parent.xb, mid_y, mid_x, parent.yt)
+    elseif symbol == :sw
         Quad(parent.xb, parent.yb, mid_x, mid_y)
     end
 end
@@ -117,13 +117,13 @@ function fit(quad::Quad, point)
     if !(quad.xb <= x < quad.xt
         && quad.yb <= y < quad.yt)
         throw(DomainError(point, "outside quadrant"))
-    elseif mid_x < x && mid_y < y
+    elseif mid_x > x && mid_y <= y
         :nw
-    elseif mid_x < x && mid_y >= y
+    elseif mid_x <= x && mid_y <= y
         :ne
-    elseif mid_x >= x && mid_y < y
+    elseif mid_x > x && mid_y > y
         :sw
-    elseif mid_x >= x && mid_y >= y
+    elseif mid_x <= x && mid_y > y
         :se
     else
         error("no quad")
@@ -203,7 +203,7 @@ ensemble = [
 
 θ = 0.5
 ε = 0.0001
-dt = 0.001
+dt = 0.0001
 
 function rk4!(p::Body, a, h)
     k1_v = a
@@ -260,12 +260,12 @@ function step!(ensemble, tree, h)
     end
 end
 
-ensemble = rand(Body, 300)
+ensemble = rand(Body, 100)
 lim = (-2, 2)
 marker = (:cross, 3)
 
-function perform!(n, ensemble::Vector{Body}, h=0.001)
-    hidden_n = 10
+function perform!(n, ensemble::Vector{Body}, h=0.0001)
+    hidden_n = 100
     output_n = Integer(n / hidden_n)
 
     println(stderr, "Performing simulation")
@@ -294,4 +294,4 @@ function perform!(n, ensemble::Vector{Body}, h=0.001)
     gif(anim)
 end
 
-perform!(1000, ensemble)
+# perform!(100000, ensemble)

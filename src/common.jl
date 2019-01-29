@@ -1,3 +1,4 @@
+using Random
 
 mutable struct Body
     r::Vector{Float64}
