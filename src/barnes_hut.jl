@@ -1,11 +1,19 @@
 import Base.push!
 using LinearAlgebra
+using Plots
+using Random
+using ProgressMeter
 
 mutable struct Body
     r::Vector{Float64}
     v::Vector{Float64}
     m::Float64
 end
+
+Base.rand(rng::AbstractRNG, ::Random.SamplerType{Body}) = Body(
+    2rand(Float32, 2) .- 1.,
+    2rand(Float32, 2) .- 1.,
+    1.)
 
 struct Quad
     xb::Float64
@@ -122,7 +130,6 @@ function fit(quad::Quad, point)
     end
 end
 
-using Plots
 
 function rectangle_from_coords(xb,yb,xt,yt)
     [
@@ -137,16 +144,14 @@ end
 
 rect(q::Quad) = Shape([q.xb, q.xt, q.xt, q.xb], [q.yb, q.yb, q.yt, q.yt])
 @recipe f(::Type{Quad}, q::Quad) = rect(q)
-# @recipe f(::Type{Array{Body}}, e::Array{Body}) =
-# @recipe f(::Type{Body}, b::Body) = (b.r[1], b.r[2])
+@recipe f(::Type{Vector{Body}}, e::Vector{Body}) = vcat(collect(map(b -> b.r, e))...)
+# @recipe f(::Type{Body}, b::Body) = |> vcat()
 
 @recipe function f(::Type{Val{:body_distribution}}, x, y, z)
-    p = map(b -> (b.r[1], b.r[2]), y)
-    a, b = zip(p)
-    println(p)
     seriestype := :scatter
-    x := a
-    y := b
+    @show x, y, z
+    x := y[:, 1]
+    y := y[:, 2]
 
     ()
 end
@@ -181,13 +186,6 @@ function plot_bodies!(my_plt, ensemble::Vector{Body})
     my_plt
 end
 
-function generate_example_Nbody(N)
-    e = [Body(
-            2rand(Float32, 2) .- 1.,
-            2rand(Float32, 2) .- 1.,
-            1.)
-        for i=1:N]
-end
 
 ensemble = [
     Body([0.563299, -0.135254, 0.115279], [-0.547044, 0.256697, -0.648452], 1.0),
@@ -262,13 +260,11 @@ function step!(ensemble, tree, h)
     end
 end
 
-using ProgressMeter
-
-ensemble = generate_example_Nbody(100)
+ensemble = rand(Body, 300)
 lim = (-2, 2)
 marker = (:cross, 3)
 
-function perform!(n, ensemble::Vector{Body}, h=0.0001)
+function perform!(n, ensemble::Vector{Body}, h=0.001)
     hidden_n = 10
     output_n = Integer(n / hidden_n)
 
@@ -284,14 +280,18 @@ function perform!(n, ensemble::Vector{Body}, h=0.0001)
         end
         plt_quads = plot(1, framestyle=:zerolines, fill=false, c=false, linecolor=:blue)
         plot_bhnode!(plt_quads, tree)
-        plt_scatter = scatter!(y=ensemble, m = marker,
-            xlim=lim, ylim=lim, title="step $(i*hidden_n)", t=:body_distribution)
+        ehh = collect(transpose(hcat(collect(map(b -> b.r, ensemble))...)))
 
-        frame(anim, plt_quads)
+        plt_scatter = scatter!(ehh[:,1], ehh[:,2], m = marker,
+            xlim=lim, ylim=lim,
+            title="step $(i*hidden_n)")
+
+        frame(anim, plt_scatter)
+        plt_scatter
         next!(prog)
     end
     display(plt_quads)
     gif(anim)
 end
 
-perform!(100, ensemble)
+perform!(1000, ensemble)
